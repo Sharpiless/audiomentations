@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 from scipy.io import wavfile
@@ -20,6 +21,40 @@ from audiomentations import (
     AddShortNoises,
     Mp3Compression,
 )
+
+
+class timer(object):
+    """
+    timer: A class used to measure the execution time of a block of code that is
+    inside a "with" statement.
+
+    Example:
+
+    ```
+    with timer("Count to 500000"):
+        x = 0
+        for i in range(500000):
+            x += 1
+        print(x)
+    ```
+
+    Will output:
+    500000
+    Count to 500000: 0.04 s
+    """
+
+    def __init__(self, description="Execution time"):
+        self.description = description
+        self.execution_time = None
+
+    def __enter__(self):
+        self.t = time.time()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.execution_time = time.time() - self.t
+        print("{}: {:.3f} s".format(self.description, self.execution_time))
+
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
@@ -61,7 +96,8 @@ if __name__ == "__main__":
     output_file_path = os.path.join(
         output_dir, "AddImpulseResponse_{:03d}.wav".format(0)
     )
-    augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+    with timer("Apply AddImpulseResponse"):
+        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
     wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # FrequencyMask
@@ -70,14 +106,16 @@ if __name__ == "__main__":
         output_file_path = os.path.join(
             output_dir, "FrequencyMask_{:03d}.wav".format(i)
         )
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply FrequencyMask"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # TimeMask
     augmenter = Compose([TimeMask(p=1.0)])
     for i in range(5):
         output_file_path = os.path.join(output_dir, "TimeMask_{:03d}.wav".format(i))
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply TimeMask"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # AddGaussianSNR
@@ -86,7 +124,8 @@ if __name__ == "__main__":
         output_file_path = os.path.join(
             output_dir, "AddGaussianSNR_{:03d}.wav".format(i)
         )
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply AddGaussianSNR"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # AddGaussianNoise
@@ -97,28 +136,32 @@ if __name__ == "__main__":
         output_file_path = os.path.join(
             output_dir, "AddGaussianNoise_{:03d}.wav".format(i)
         )
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply AddGaussianSNR"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # TimeStretch
     augmenter = Compose([TimeStretch(min_rate=0.8, max_rate=1.25, p=1.0)])
     for i in range(5):
         output_file_path = os.path.join(output_dir, "TimeStretch_{:03d}.wav".format(i))
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply TimeStretch"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # PitchShift
     augmenter = Compose([PitchShift(min_semitones=-4, max_semitones=4, p=1.0)])
     for i in range(5):
         output_file_path = os.path.join(output_dir, "PitchShift_{:03d}.wav".format(i))
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply PitchShift"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # Shift
     augmenter = Compose([Shift(min_fraction=-0.5, max_fraction=0.5, p=1.0)])
     for i in range(5):
         output_file_path = os.path.join(output_dir, "Shift_{:03d}.wav".format(i))
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply Shift"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # Shift without rollover
@@ -129,20 +172,23 @@ if __name__ == "__main__":
         output_file_path = os.path.join(
             output_dir, "ShiftWithoutRollover_{:03d}.wav".format(i)
         )
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply ShiftWithoutRollover"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # Normalize
     augmenter = Compose([Normalize(p=1.0)])
     output_file_path = os.path.join(output_dir, "Normalize_{:03d}.wav".format(0))
-    augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+    with timer("Apply Normalize"):
+        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
     wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # Resample
     augmenter = Compose([Resample(p=1.0)])
     for i in range(5):
         output_file_path = os.path.join(output_dir, "Resample_{:03d}.wav".format(i))
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply Resample"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # ClippingDistortion
@@ -151,7 +197,8 @@ if __name__ == "__main__":
         output_file_path = os.path.join(
             output_dir, "ClippingDistortion_{:03d}.wav".format(i)
         )
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply ClippingDistortion"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # AddBackgroundNoise
@@ -166,7 +213,8 @@ if __name__ == "__main__":
         output_file_path = os.path.join(
             output_dir, "AddBackgroundNoise_{:03d}.wav".format(i)
         )
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply AddBackgroundNoise"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # AddShortNoises
@@ -193,7 +241,8 @@ if __name__ == "__main__":
         output_file_path = os.path.join(
             output_dir, "AddShortNoises_{:03d}.wav".format(i)
         )
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply AddShortNoises"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
 
     # Mp3Compression
@@ -202,6 +251,7 @@ if __name__ == "__main__":
         output_file_path = os.path.join(
             output_dir, "Mp3Compression_{:03d}.wav".format(i)
         )
-        augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
+        with timer("Apply Mp3Compression"):
+            augmented_samples = augmenter(samples=samples, sample_rate=SAMPLE_RATE)
         print(augmenter.transforms[0].parameters)
         wavfile.write(output_file_path, rate=SAMPLE_RATE, data=augmented_samples)
